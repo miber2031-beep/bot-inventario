@@ -123,7 +123,7 @@ async def botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # 🔴 AGOTADOS
     if data == "agotados":
         mensajes = obtener_agotados()
-        await query.message.reply_text("🔴 Productos agotados:\n")
+        await query.message.reply_text("🔴 *PRODUCTOS AGOTADOS*\n", parse_mode="Markdown")
 
         for msg in mensajes:
             await query.message.reply_text(msg)
@@ -131,7 +131,7 @@ async def botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # 🟡 PROXIMOS
     elif data == "vencimientos":
         mensajes = obtener_proximos()
-        await query.message.reply_text("🟡 Próximo a vencerse:\n")
+        await query.message.reply_text("🟡 *PRÓXIMOS A VENCER*\n", parse_mode="Markdown")
 
         for msg in mensajes:
             await query.message.reply_text(msg)
