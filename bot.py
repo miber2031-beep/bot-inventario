@@ -60,7 +60,7 @@ def obtener_proximos():
         df = pd.read_csv(URL_PROXIMOS)
 
         if df.empty:
-            return ["No hay productos próximos"]
+            return ["No hay productos próximos a vencer"]
 
         mensajes = []
         bloque = ""
@@ -69,7 +69,7 @@ def obtener_proximos():
             codigo = str(row.iloc[0])
             material = str(row.iloc[1])
 
-            linea = f"{codigo} - {material}\n------\n"
+            linea = f"🟡 {codigo}\n📦 {material}\n⏳ Próximo a vencer\n────────────\n"
 
             if len(bloque + linea) > 4000:
                 mensajes.append(bloque)
@@ -84,7 +84,6 @@ def obtener_proximos():
 
     except Exception as e:
         return [f"Error PROXIMOS: {e}"]
-
 
 # ================================
 # 📋 MENÚ INLINE
