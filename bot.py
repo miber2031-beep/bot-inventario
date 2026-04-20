@@ -36,7 +36,7 @@ def obtener_agotados():
             material = str(row.iloc[1])
             estado = str(row.iloc[2])
 
-            linea = f"{codigo} - {material} - {estado}\n"
+            linea = f"🔴 {codigo}\n📦 {material}\n📌 {estado}\n────────────\n"
 
             if len(bloque + linea) > 4000:
                 mensajes.append(bloque)
@@ -51,7 +51,6 @@ def obtener_agotados():
 
     except Exception as e:
         return [f"Error AGOTADOS: {e}"]
-
 
 # ================================
 # 🟡 PROXIMOS
