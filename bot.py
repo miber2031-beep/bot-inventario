@@ -104,7 +104,7 @@ def menu_inline():
 # ================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "👋 *Soy MARBELL-LEE!!!*\n"
+        "👋 *Hola ... soy MARBELL-LEE!!!*\n"
         "🤖 Tu Asistente Virtual Pozuelo\n\n"
         "Selecciona una opción:",
         reply_markup=menu_inline(),
