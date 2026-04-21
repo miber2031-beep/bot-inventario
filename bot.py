@@ -3,6 +3,11 @@ import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
+cache = {
+    "agotados": [],
+    "proximos": []
+}
+
 TOKEN = os.getenv("TOKEN") or "8671710771:AAFS7WdDTq3Wlx6cC80NGRLVLMdKzzeTW1M"
 
 URL_AGOTADOS = "https://docs.google.com/spreadsheets/d/1xNOPwkbunW1-9_wDIb7PwbdBn6oLvDGZZKnWVnhJJO4/gviz/tq?tqx=out:csv&gid=0"
@@ -14,12 +19,16 @@ ITEMS_PER_PAGE = 5
 # 🔹 CARGAR DATOS
 # ================================
 def cargar_agotados():
-    df = pd.read_csv(URL_AGOTADOS)
-    return df.fillna("").values.tolist()
+    if not cache["agotados"]:
+        df = pd.read_csv(URL_AGOTADOS)
+        cache["agotados"] = df.fillna("").values.tolist()
+    return cache["agotados"]
 
 def cargar_proximos():
-    df = pd.read_csv(URL_PROXIMOS)
-    return df.fillna("").values.tolist()
+    if not cache["proximos"]:
+        df = pd.read_csv(URL_PROXIMOS)
+        cache["proximos"] = df.fillna("").values.tolist()
+    return cache["proximos"]
 
 # ================================
 # 🔹 PAGINADOR
@@ -132,8 +141,10 @@ async def botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # 🔄 RECARGAR
     if data == "recargar":
-        await query.answer("Datos actualizados ✔", show_alert=True)
-        return
+    cache["agotados"] = []
+    cache["proximos"] = []
+    await query.answer("🔄 Datos actualizados", show_alert=True)
+    return
 
     # ❌ SALIR
    if data == "salir":
