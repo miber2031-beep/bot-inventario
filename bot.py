@@ -121,56 +121,38 @@ async def botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     data = query.data
 
-    # 🔴 AGOTADOS
     if data == "agotados":
         mensajes = obtener_agotados()
-
-        await query.message.reply_text(
-            "🔴 *PRODUCTOS AGOTADOS*\n",
-            parse_mode="Markdown"
-        )
+        await query.message.reply_text("🔴 PRODUCTOS AGOTADOS\n")
 
         for msg in mensajes:
             await query.message.reply_text(msg)
 
-    # 🟡 PRÓXIMOS
     elif data == "vencimientos":
         mensajes = obtener_proximos()
-
-        await query.message.reply_text(
-            "🟡 *PRÓXIMOS A VENCER*\n",
-            parse_mode="Markdown"
-        )
+        await query.message.reply_text("🟡 PRÓXIMOS A VENCER\n")
 
         for msg in mensajes:
             await query.message.reply_text(msg)
 
-    # 🟠 BAJO INVENTARIO
     elif data == "bajo":
         await query.message.reply_text(
-            "🟠 Módulo de bajo inventario en construcción 🚧\n\n"
-            "Próximamente disponible."
+            "🟠 Módulo en construcción\n\nPróximamente disponible."
         )
 
-    # 🔄 RECARGAR
     elif data == "recargar":
-        await query.message.reply_text(
-            "🔄 Datos actualizados desde Google Sheets"
-        )
+        await query.message.reply_text("🔄 Datos actualizados")
 
-    # ❌ SALIR
     elif data == "salir":
         await query.message.reply_text(
             "👋 Sesión finalizada.\nEscribe /start para volver."
         )
         return
 
-    # 🔁 VOLVER AL MENÚ (SIEMPRE)
     await query.message.reply_text(
         "¿Qué deseas hacer ahora?",
         reply_markup=menu_inline()
     )
-
 # ================================
 # ▶️ MAIN
 # ================================
