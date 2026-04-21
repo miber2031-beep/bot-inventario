@@ -3,91 +3,110 @@ import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
-cache = {
-    "agotados": [],
-    "proximos": []
-}
+# ================================
+# 🔑 TOKEN (LOCAL + RAILWAY)
+# ================================
+TOKEN = os.getenv("TOKEN")
 
-TOKEN = os.getenv("TOKEN") or "8671710771:AAFS7WdDTq3Wlx6cC80NGRLVLMdKzzeTW1M"
+if not TOKEN:
+    TOKEN = "8671710771:AAFS7WdDTq3Wlx6cC80NGRLVLMdKzzeTW1M"  # 👈 reemplaza solo para pruebas locales
 
+
+# ================================
+# 🌐 GOOGLE SHEETS LINKS
+# ================================
 URL_AGOTADOS = "https://docs.google.com/spreadsheets/d/1xNOPwkbunW1-9_wDIb7PwbdBn6oLvDGZZKnWVnhJJO4/gviz/tq?tqx=out:csv&gid=0"
+
 URL_PROXIMOS = "https://docs.google.com/spreadsheets/d/1xNOPwkbunW1-9_wDIb7PwbdBn6oLvDGZZKnWVnhJJO4/gviz/tq?tqx=out:csv&gid=462007210"
-
-ITEMS_PER_PAGE = 5
-
 # ================================
-# 🔹 CARGAR DATOS
+# 🔴 AGOTADOS
 # ================================
-def cargar_agotados():
-    if not cache["agotados"]:
+def obtener_agotados():
+    try:
         df = pd.read_csv(URL_AGOTADOS)
-        cache["agotados"] = df.fillna("").values.tolist()
-    return cache["agotados"]
 
-def cargar_proximos():
-    if not cache["proximos"]:
+        if df.empty:
+            return ["No hay productos agotados"]
+
+        mensajes = []
+        bloque = ""
+
+        for _, row in df.iterrows():
+            codigo = str(row.iloc[0])
+            material = str(row.iloc[1])
+            estado = str(row.iloc[2])
+
+            linea = f"🔴 {codigo}\n📦 {material}\n📌 {estado}\n────────────\n"
+
+            if len(bloque + linea) > 4000:
+                mensajes.append(bloque)
+                bloque = linea
+            else:
+                bloque += linea
+
+        if bloque:
+            mensajes.append(bloque)
+
+        return mensajes
+
+    except Exception as e:
+        return [f"Error AGOTADOS: {e}"]
+
+# ================================
+# 🟡 PROXIMOS
+# ================================
+def obtener_proximos():
+    try:
         df = pd.read_csv(URL_PROXIMOS)
-        cache["proximos"] = df.fillna("").values.tolist()
-    return cache["proximos"]
+
+        if df.empty:
+            return ["No hay productos próximos a vencer"]
+
+        mensajes = []
+        bloque = ""
+
+        for _, row in df.iterrows():
+            codigo = str(row.iloc[0])
+            material = str(row.iloc[1])
+
+            linea = f"🟡 {codigo}\n📦 {material}\n⏳ Próximo a vencer\n────────────\n"
+
+            if len(bloque + linea) > 4000:
+                mensajes.append(bloque)
+                bloque = linea
+            else:
+                bloque += linea
+
+        if bloque:
+            mensajes.append(bloque)
+
+        return mensajes
+
+    except Exception as e:
+        return [f"Error PROXIMOS: {e}"]
 
 # ================================
-# 🔹 PAGINADOR
-# ================================
-def construir_pagina(data, page, tipo):
-    start = page * ITEMS_PER_PAGE
-    end = start + ITEMS_PER_PAGE
-    items = data[start:end]
-
-    titulo = "🔴 AGOTADOS" if tipo == "agotados" else "🟡 PRÓXIMOS A VENCER"
-
-    texto = f"{titulo}\n📄 Página {page+1}\n\n"
-
-    for i, row in enumerate(items, start=1):
-        codigo = row[0]
-        material = row[1]
-
-        if tipo == "agotados":
-            estado = row[2]
-            texto += f"{start+i}. 🔴 {codigo}\n📦 {material}\n📌 {estado}\n──────────\n"
-        else:
-            texto += f"{start+i}. 🟡 {codigo}\n📦 {material}\n⏳ Próximo\n──────────\n"
-
-    botones = []
-
-    nav = []
-    if page > 0:
-        nav.append(InlineKeyboardButton("⏮️", callback_data=f"{tipo}_{page-1}"))
-    if end < len(data):
-        nav.append(InlineKeyboardButton("⏭️", callback_data=f"{tipo}_{page+1}"))
-
-    if nav:
-        botones.append(nav)
-
-    botones.append([
-        InlineKeyboardButton("🔙 Menú", callback_data="menu"),
-        InlineKeyboardButton("❌ Salir", callback_data="salir")
-    ])
-
-    return texto, InlineKeyboardMarkup(botones)
-
-# ================================
-# 📋 MENÚ
+# 📋 MENÚ INLINE
 # ================================
 def menu_inline():
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔴 Agotados", callback_data="menu_agotados")],
-        [InlineKeyboardButton("🟡 Próximo a vencer", callback_data="menu_proximos")],
+    keyboard = [
+        [InlineKeyboardButton("🔴 Agotados", callback_data="agotados")],
+        [InlineKeyboardButton("🟡 Próximo a vencer", callback_data="vencimientos")],
         [InlineKeyboardButton("🟠 Bajo inventario", callback_data="bajo")],
         [InlineKeyboardButton("🔄 Actualizar datos", callback_data="recargar")],
         [InlineKeyboardButton("❌ Salir", callback_data="salir")]
-    ])
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
 
 # ================================
 # 🚀 START
 # ================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "👋 *Hola ... soy MARBELL-LEE!!!*\n🤖 Tu Asistente Virtual Pozuelo\n\nSelecciona una opción:",
+        "👋 *Hola ... soy MARBELL-LEE!!!*\n"
+        "🤖 Tu Asistente Virtual Pozuelo\n\n"
+        "Selecciona una opción:",
         reply_markup=menu_inline(),
         parse_mode="Markdown"
     )
@@ -98,66 +117,48 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+
     data = query.data
 
-    # MENÚ
-    if data == "menu":
-        await query.edit_message_text("📊 Panel de opciones:", reply_markup=menu_inline())
-        return
-
     # 🔴 AGOTADOS
-    if data == "menu_agotados":
-        data_list = cargar_agotados()
-        text, kb = construir_pagina(data_list, 0, "agotados")
-        await query.edit_message_text(text, reply_markup=kb)
-        return
+    if data == "agotados":
+        mensajes = obtener_agotados()
+        await query.message.reply_text("🔴 *PRODUCTOS AGOTADOS*\n", parse_mode="Markdown")
+
+        for msg in mensajes:
+            await query.message.reply_text(msg)
 
     # 🟡 PROXIMOS
-    if data == "menu_proximos":
-        data_list = cargar_proximos()
-        text, kb = construir_pagina(data_list, 0, "proximos")
-        await query.edit_message_text(text, reply_markup=kb)
-        return
+    elif data == "vencimientos":
+        mensajes = obtener_proximos()
+        await query.message.reply_text("🟡 *PRÓXIMOS A VENCER*\n", parse_mode="Markdown")
 
-    # 🔄 PAGINACIÓN
-    if data.startswith("agotados_"):
-        page = int(data.split("_")[1])
-        data_list = cargar_agotados()
-        text, kb = construir_pagina(data_list, page, "agotados")
-        await query.edit_message_text(text, reply_markup=kb)
-        return
+        for msg in mensajes:
+            await query.message.reply_text(msg)
 
-    if data.startswith("proximos_"):
-        page = int(data.split("_")[1])
-        data_list = cargar_proximos()
-        text, kb = construir_pagina(data_list, page, "proximos")
-        await query.edit_message_text(text, reply_markup=kb)
-        return
-
-    # 🟠 BAJO
-    if data == "bajo":
-        await query.edit_message_text("🟠 Módulo en construcción 🚧")
-        return
+    # 🟠 BAJO INVENTARIO (EN CONSTRUCCIÓN)
+    elif data == "bajo":
+        await query.message.reply_text(
+            "🟠 Módulo de bajo inventario en construcción 🚧\n\n"
+            "Próximamente disponible."
+        )
 
     # 🔄 RECARGAR
-    if data == "recargar":
-    cache["agotados"] = []
-    cache["proximos"] = []
-    await query.answer("🔄 Datos actualizados", show_alert=True)
-    return
+    elif data == "recargar":
+        await query.message.reply_text("🔄 Datos actualizados desde Google Sheets")
 
     # ❌ SALIR
-   if data == "salir":
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔄 Volver al inicio", callback_data="menu")]
-    ])
+    elif data == "salir":
+        await query.message.reply_text(
+            "👋 Sesión finalizada.\nEscribe /start para volver."
+        )
+        return
 
-    await query.edit_message_text(
-        "👋 *Sesión finalizada*\n\n¿Deseas volver al menú?",
-        reply_markup=keyboard,
-        parse_mode="Markdown"
+    # 🔁 VOLVER AL MENÚ
+    await query.message.reply_text(
+        "¿Qué deseas hacer ahora?",
+        reply_markup=menu_inline()
     )
-    return
 
 
 # ================================
@@ -169,5 +170,5 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(botones))
 
-    print("✅ Bot PRO con paginación corriendo...")
+    print("✅ Bot PRO con Google Sheets corriendo...")
     app.run_polling()
