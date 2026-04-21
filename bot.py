@@ -114,6 +114,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ================================
 # 🔘 BOTONES
 # ================================
+# 📌 BOTONES
 async def botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -123,20 +124,28 @@ async def botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # 🔴 AGOTADOS
     if data == "agotados":
         mensajes = obtener_agotados()
-        await query.message.reply_text("🔴 *PRODUCTOS AGOTADOS*\n", parse_mode="Markdown")
+
+        await query.message.reply_text(
+            "🔴 *PRODUCTOS AGOTADOS*\n",
+            parse_mode="Markdown"
+        )
 
         for msg in mensajes:
             await query.message.reply_text(msg)
 
-    # 🟡 PROXIMOS
+    # 🟡 PRÓXIMOS
     elif data == "vencimientos":
         mensajes = obtener_proximos()
-        await query.message.reply_text("🟡 *PRÓXIMOS A VENCER*\n", parse_mode="Markdown")
+
+        await query.message.reply_text(
+            "🟡 *PRÓXIMOS A VENCER*\n",
+            parse_mode="Markdown"
+        )
 
         for msg in mensajes:
             await query.message.reply_text(msg)
 
-    # 🟠 BAJO INVENTARIO (EN CONSTRUCCIÓN)
+    # 🟠 BAJO INVENTARIO
     elif data == "bajo":
         await query.message.reply_text(
             "🟠 Módulo de bajo inventario en construcción 🚧\n\n"
@@ -145,7 +154,9 @@ async def botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # 🔄 RECARGAR
     elif data == "recargar":
-        await query.message.reply_text("🔄 Datos actualizados desde Google Sheets")
+        await query.message.reply_text(
+            "🔄 Datos actualizados desde Google Sheets"
+        )
 
     # ❌ SALIR
     elif data == "salir":
@@ -154,12 +165,11 @@ async def botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    # 🔁 VOLVER AL MENÚ
+    # 🔁 VOLVER AL MENÚ (SIEMPRE)
     await query.message.reply_text(
         "¿Qué deseas hacer ahora?",
         reply_markup=menu_inline()
     )
-
 
 # ================================
 # ▶️ MAIN
