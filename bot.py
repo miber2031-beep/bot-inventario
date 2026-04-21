@@ -136,9 +136,17 @@ async def botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # ❌ SALIR
-    if data == "salir":
-        await query.edit_message_text("👋 Sesión finalizada")
-        return
+   if data == "salir":
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔄 Volver al inicio", callback_data="menu")]
+    ])
+
+    await query.edit_message_text(
+        "👋 *Sesión finalizada*\n\n¿Deseas volver al menú?",
+        reply_markup=keyboard,
+        parse_mode="Markdown"
+    )
+    return
 
 
 # ================================
