@@ -3,24 +3,14 @@ import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
-# ================================
-# 🔑 TOKEN (LOCAL + RAILWAY)
-# ================================
 TOKEN = os.getenv("TOKEN")
 
 if not TOKEN:
-    TOKEN = "8671710771:AAFS7WdDTq3Wlx6cC80NGRLVLMdKzzeTW1M"  # 👈 reemplaza solo para pruebas locales
+    raise ValueError("❌ TOKEN no configurado en Railway")
 
-
-# ================================
-# 🌐 GOOGLE SHEETS LINKS
-# ================================
 URL_AGOTADOS = "https://docs.google.com/spreadsheets/d/1xNOPwkbunW1-9_wDIb7PwbdBn6oLvDGZZKnWVnhJJO4/gviz/tq?tqx=out:csv&gid=0"
-
 URL_PROXIMOS = "https://docs.google.com/spreadsheets/d/1xNOPwkbunW1-9_wDIb7PwbdBn6oLvDGZZKnWVnhJJO4/gviz/tq?tqx=out:csv&gid=462007210"
-# ================================
-# 🔴 AGOTADOS
-# ================================
+
 def obtener_agotados():
     try:
         df = pd.read_csv(URL_AGOTADOS)
@@ -52,9 +42,6 @@ def obtener_agotados():
     except Exception as e:
         return [f"Error AGOTADOS: {e}"]
 
-# ================================
-# 🟡 PROXIMOS
-# ================================
 def obtener_proximos():
     try:
         df = pd.read_csv(URL_PROXIMOS)
@@ -85,9 +72,6 @@ def obtener_proximos():
     except Exception as e:
         return [f"Error PROXIMOS: {e}"]
 
-# ================================
-# 📋 MENÚ INLINE
-# ================================
 def menu_inline():
     keyboard = [
         [InlineKeyboardButton("🔴 Agotados", callback_data="agotados")],
@@ -98,23 +82,15 @@ def menu_inline():
     ]
     return InlineKeyboardMarkup(keyboard)
 
-
-# ================================
-# 🚀 START
-# ================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "👋 *Hola ... soy MARBELL-LEE!!!*\n"
+        "👋 *Hola ... soy MARBELL-LEE*\n"
         "🤖 Tu Asistente Virtual Pozuelo\n\n"
         "Selecciona una opción:",
         reply_markup=menu_inline(),
         parse_mode="Markdown"
     )
 
-# ================================
-# 🔘 BOTONES
-# ================================
-# 📌 BOTONES
 async def botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -123,25 +99,25 @@ async def botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if data == "agotados":
         mensajes = obtener_agotados()
-        await query.message.reply_text("🔴 PRODUCTOS AGOTADOS\n")
+        await query.message.reply_text("🔴 *PRODUCTOS AGOTADOS*\n", parse_mode="Markdown")
 
         for msg in mensajes:
             await query.message.reply_text(msg)
 
     elif data == "vencimientos":
         mensajes = obtener_proximos()
-        await query.message.reply_text("🟡 PRÓXIMOS A VENCER\n")
+        await query.message.reply_text("🟡 *PRÓXIMOS A VENCER*\n", parse_mode="Markdown")
 
         for msg in mensajes:
             await query.message.reply_text(msg)
 
     elif data == "bajo":
         await query.message.reply_text(
-            "🟠 Módulo en construcción\n\nPróximamente disponible."
+            "🟠 Módulo de bajo inventario en construcción 🚧"
         )
 
     elif data == "recargar":
-        await query.message.reply_text("🔄 Datos actualizados")
+        await query.message.reply_text("🔄 Datos actualizados correctamente")
 
     elif data == "salir":
         await query.message.reply_text(
@@ -153,14 +129,12 @@ async def botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "¿Qué deseas hacer ahora?",
         reply_markup=menu_inline()
     )
-# ================================
-# ▶️ MAIN
-# ================================
+
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(botones))
 
-    print("✅ Bot PRO con Google Sheets corriendo...")
+    print("✅ Bot PRO corriendo en Railway...")
     app.run_polling()
